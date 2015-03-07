@@ -12,11 +12,10 @@ public class Taxonomy {
 	static ArrayList<String>  attrList = new ArrayList<String>();
 	
 	
-	public Taxonomy(String fname) {
+	public Taxonomy(String dir) {
 		super();
-		setAttrTaxa();
-		printAttrListToFile(fname);
-		
+		setAttrTaxa(dir);
+		printAttrListToFile(dir);	
 	}
 
 	public Taxonomy() {
@@ -24,17 +23,17 @@ public class Taxonomy {
 		// TODO Auto-generated constructor stub
 	}
 
-	void setAttrTaxa() {
+	void setAttrTaxa(String dir) {
 		@SuppressWarnings("resource")
 		Scanner in = new Scanner(System.in);
 		String attr;
 		System.out.println("Enter the attribute name:");
 		attr = in.next();
 		attrList.add(attr);
-		System.out.println("Create taxonomy");
+		System.out.println("Create tptds");
 		taxa = createTaxonomy();
-		printTaxaToFile(attr);
-		System.out.println(attrList);
+		printTaxaToFile(dir+"/"+attr);
+//		System.out.println(attrList);
 	}
 
 	NodeObject createNodeObject() {
@@ -110,22 +109,10 @@ public class Taxonomy {
 		}
 	}
 
-	void preOrder(TaxaTree node) {
-		if (node == null)
-			return;
-
-		node.printNode();
-		if (node.hasChildren()) {
-			for (int i = 0; i < node.getNoChildren(); i++) {
-				preOrder(node.children()[i]);
-			}
-		}
-	}
-	
-	void printAttrListToFile(String filename) {
+	void printAttrListToFile(String dir) {
 	
 		try {
-			FileWriter fout = new FileWriter(filename);
+			FileWriter fout = new FileWriter(dir+"/AttributeList");
 			for(String attr : attrList )
 			 fout.write(attr+"\n");
 			fout.close();

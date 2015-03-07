@@ -2,7 +2,6 @@ package tptds;
 
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -10,26 +9,31 @@ import java.util.Scanner;
 public class DatasetInfo {
 	
 
+	public DatasetInfo() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
 	ArrayList<String> attrlist;
 
-	public ArrayList<String> getAttrlist() {
+	public ArrayList<String> getAttrlist(String dir) {
+		attrlist = readAttrListFromFile(dir+"/AttributeList");
 		return attrlist;
+
 	}
 	
 
-	public DatasetInfo(String AttrFile) {
+	public DatasetInfo(String DataDir) {
 		super();
-		buildAttrTaxa(AttrFile);
-	    attrlist = readAttrListFromFile(AttrFile);
-		System.out.print(attrlist);	
+		buildAttrTaxa(DataDir);		
 	}
 
 
-	public void buildAttrTaxa(String AttrFile) {
+	public void buildAttrTaxa(String DataDir) {
 		Scanner in = new Scanner(System.in);
 		int flag;
 		do {
-			new Taxonomy(AttrFile);
+			new Taxonomy(DataDir);
 			System.out.println("continue?(enter 0 to exit):");
 			flag = in.nextInt();
 		} while (flag != 0);
@@ -37,28 +41,7 @@ public class DatasetInfo {
 		System.out.println("Exiting..");
 	}
 
-	TaxaTree readTaxaFromFile(String filename) {
-
-		// Object deserialization
-		try {
-			TaxaTree taxon;
-			FileInputStream fis = new FileInputStream(filename);
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			taxon = (TaxaTree) ois.readObject();
-			ois.close();
-			System.out.println("taxon read: " + taxon);
-			taxon.printNode();
-			return taxon;
-		} catch (Exception e) {
-			System.out.println("Exception during deserialization: " + e);
-			System.exit(0);
-		}
-		return null;
-	}
-
 	ArrayList<String> readAttrListFromFile(String filename) {
-
-		// Object deserialization
 		try {
 			ArrayList<String> attrlist = new ArrayList<String>();
 			FileReader fin = new FileReader(filename);
@@ -69,13 +52,9 @@ public class DatasetInfo {
 			src.close();
 			return attrlist;
 		} catch (Exception e) {
-			System.out.println("Exception during deserialization: " + e);
+			System.out.println("Exception during reading from file:" + e);
 			System.exit(0);
 		}
 		return null;
 	}
-
-	/*public static void main(String[] args) throws IOException {
-		new AttributeData(args[0]);
-	}*/
 }

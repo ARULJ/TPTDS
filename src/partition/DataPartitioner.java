@@ -1,4 +1,4 @@
-package dump;
+package partition;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -15,6 +15,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 import org.apache.hadoop.util.GenericOptionsParser;
 
 public class DataPartitioner {
@@ -27,6 +28,7 @@ public class DataPartitioner {
 		public void map(LongWritable key, Text value, Context context)
 				throws IOException, InterruptedException {
 			Random genRand = new Random();
+			System.out.println("partition_parameter = "+ partition_parameter);
 			int rand = genRand.nextInt(partition_parameter) + 1;
 			context.write(new IntWritable(rand), value);
 		}
@@ -34,7 +36,15 @@ public class DataPartitioner {
 
 	public static class PartitionReducer extends
 			Reducer<IntWritable, Text, NullWritable, Text> {
+		
+		private MultipleOutputs<NullWritable, Text> multipleoutputs;
+		
+		@Override
+		protected void setup(Context context)throws IOException, InterruptedException{
+			multipleoutputs =new MultipleOutputs<NullWritable, Text>(context);
+		}
 
+		@Override
 		public void reduce(IntWritable key, Iterable<Text> values,
 				Context context) throws IOException, InterruptedException {
 
@@ -43,7 +53,12 @@ public class DataPartitioner {
 				list.add(new Text(val+"\n"));
 			}
 
-			context.write(NullWritable.get(), new Text(list.toString()));
+			multipleoutputs.write(NullWritable.get(), new Text(list.toString()),Integer.toString(key.get()));
+		}
+		
+		@Override
+		protected void cleanup(Context context) throws IOException, InterruptedException{
+			multipleoutputs.close();
 		}
 
 	}
@@ -71,6 +86,7 @@ public class DataPartitioner {
 		}
 
 		partition_parameter = Integer.parseInt(otherArgs[2]);
+		System.out.println("partition_parameter read = "+partition_parameter);
 		Job job = new Job(conf, "DataPartitioner");
 		job.setJarByClass(DataPartitioner.class);
 		job.setMapperClass(PartitionMapper.class);
@@ -95,4 +111,3 @@ public class DataPartitioner {
 	}
 
 }
-

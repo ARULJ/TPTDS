@@ -1,49 +1,82 @@
 package tptds;
 
-import tptds.TaxaTree;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Scanner;
+import java.util.List;
 
 public class AnonymizationLevel {
-	
-	HashMap<String,String> AL = new HashMap<String,String>();
-	HashMap<String,TaxaTree> taxaPtrs = new HashMap<String,TaxaTree>();
-	
-	
+
+	ArrayList<Specification> AL = new ArrayList<Specification>();
+	HashMap<String, TaxaTree> taxaPtrs = new HashMap<String, TaxaTree>();
+	ArrayList<String> attrlist;
+
+	DatasetInfo data = new DatasetInfo();
 
 	public AnonymizationLevel() {
 		super();
+		loadTaxonomy("data");
+		initializeAL();
+		for(Specification spec : AL){
+			spec.printSpec();
+		}
+	}
 
-		Scanner in = new Scanner(System.in);
+	void initializeAL() {
+		List<String> valSet;
+		Specification [] spec = new Specification[attrlist.size()];
+		int i = 0;
+		for (String attr : attrlist) {
+			TaxaTree taxa = taxaPtrs.get(attr);
+			valSet = new ArrayList<String>();
+			if (taxa != null) {
+				spec[i] = new Specification();
+				spec[i].setAttribute(attr);
+				spec[i].setParent(taxa.getNodelabel());
+				if (taxa.hasChildren()) {
+					for (TaxaTree child : taxa.children()) {
+						valSet.add(child.getNodelabel());
+					}
+					spec[i].setChild(valSet);
+					AL.add(spec[i]);
+					//spec[i].printSpec();
+				} else
+					System.out.println(taxa.getNodelabel() + " is a leaf");
+			}
+			i++;
+		}
+
+	}
+
+
+	public HashMap<String, TaxaTree> getTaxaPtrs() {
+		return taxaPtrs;
+	}
+
+	public ArrayList<String> getTrace(String attr, String sv) {
 		ArrayList<String> Trace = new ArrayList<String>();
-		System.out.println("Enter taxonomy file to be altered:");
-		alterTaxa(in.next());
-		System.out.println("Enter attr name:");
-		String fname = in.next();
-		System.out.println("Enter sensitive value:");
-		String sv = in.next();
-
 		TaxaTree node = new TaxaTree();
-		TaxaTree taxa = readTaxaFromFile(fname);
-
-		node = getNode(taxa, sv);
-		getTrace(node, Trace);
+		node = getNode(taxaPtrs.get(attr), sv);
+		getTaxaTrace(node, Trace);
 		System.out.println(Trace);
+		return Trace;
 	}
 
-	public void loadTaxonomy(){
-		
+	public void loadTaxonomy(String DataDir) {
+		attrlist = data.getAttrlist(DataDir);
+		System.out.println(attrlist);
+		for (String attr : attrlist) {
+			TaxaTree taxa = readTaxaFromFile(DataDir + "/" + attr);
+//			taxa.preOrder(taxa);
+			taxaPtrs.put(attr, taxa);
+		}
 	}
-	public void alterTaxa(String fname){
-		new DatasetInfo(fname);
-	}
-	
-	public void getTrace(TaxaTree taxa, ArrayList<String> trace) {
+
+	public void getTaxaTrace(TaxaTree taxa, ArrayList<String> trace) {
 		trace.add(taxa.getNodelabel());
 		taxa.printNode();
 		while (taxa.getParent() != null) {
@@ -51,6 +84,7 @@ public class AnonymizationLevel {
 			taxa.printNode();
 			trace.add(taxa.getNodelabel());
 		}
+		Collections.reverse(trace);
 	}
 
 	private TaxaTree getNode(TaxaTree taxa, String label) {
@@ -71,7 +105,7 @@ public class AnonymizationLevel {
 		return null;
 	}
 
-	private TaxaTree readTaxaFromFile(String filename) {
+	private TaxaTree readTaxaFromFile (String filename) {
 
 		// Object deserialization
 		try {
@@ -80,10 +114,11 @@ public class AnonymizationLevel {
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			taxon = (TaxaTree) ois.readObject();
 			ois.close();
-			System.out.println("taxon read: " + taxon);
-			taxon.printNode();
+			// System.out.println("taxon read: " + taxon);
+			// taxon.printNode();
 			return taxon;
-		} catch (Exception e) {
+		} catch (Exception e)
+		{
 			System.out.println("Exception during deserialization: " + e);
 			System.exit(0);
 		}

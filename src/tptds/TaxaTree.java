@@ -150,5 +150,17 @@ public class TaxaTree implements Serializable {
 		n.printLabel();
 
 	}
+	
+	void preOrder(TaxaTree node) {
+		if (node == null)
+			return;
+		node.printNode();
+		if (node.hasChildren()) {
+			for (int i = 0; i < node.getNoChildren(); i++) {
+				preOrder(node.children()[i]);
+			}
+		}
+	}
+	
 
 }
